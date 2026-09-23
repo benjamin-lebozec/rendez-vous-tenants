@@ -1,0 +1,120 @@
+# =============================================================================
+# Configuration des pages de prise de rendez-vous
+# -----------------------------------------------------------------------------
+# - Le fichier est relu automatiquement à chaque modification (pas de redémarrage).
+# - "${VAR}" ou "${VAR:-défaut}" est remplacé par la variable d'environnement.
+# - "defaults" s'applique à toutes les pages ; chaque page peut surcharger
+#   n'importe quelle clé (fusion profonde, les listes sont remplacées).
+# - Durées : nombre de minutes ou "30m", "4h", "2d".
+# =============================================================================
+
+site:
+  title: Prendre rendez-vous        # titre de la page d'accueil "/"
+
+defaults:
+  timezone: Europe/Paris             # fuseau dans lequel sont exprimées les plages horaires
+  durations: [30]                    # durée(s) proposée(s) ; plusieurs = le visiteur choisit
+  slot_interval: null                # pas entre deux débuts de créneau (null = durée du RDV)
+  buffer_before: 0                   # temps libre exigé avant le RDV
+  buffer_after: 10m                  # temps libre exigé après le RDV
+  min_notice: 4h                     # délai de prévenance minimum
+  max_days_ahead: 30                 # réservable jusqu'à J+30
+  max_per_day: null                  # nb max de RDV par jour via cette page (null = illimité)
+
+  # Disponibilités générales (heure locale du "timezone").
+  # Exception à la fusion : si une page définit weekly_hours, il remplace entièrement
+  # celui-ci (un jour absent = fermé).
+  weekly_hours:
+    mon: ["09:00-12:00", "14:00-18:00"]
+    tue: ["09:00-12:00", "14:00-18:00"]
+    wed: ["09:00-12:00", "14:00-18:00"]
+    thu: ["09:00-12:00", "14:00-18:00"]
+    fri: ["09:00-12:00", "14:00-17:00"]
+    sat: []
+    sun: []
+
+  # Disponibilités spécifiques à une date (remplacent l'horaire hebdo ce jour-là ; [] = fermé).
+  # Fusionnées avec celles des pages : pratique pour les jours fériés communs.
+  date_overrides:
+    "2026-12-24": ["09:00-12:00"]
+    "2026-12-25": []
+
+  form:
+    message: optional                # hidden | optional | required
+    message_label: "Objet du rendez-vous (optionnel)"
+
+  event:
+    summary: "RDV {{first_name}} {{last_name}} — {{title}}"
+    description: |
+      Rendez-vous pris via la page « {{title}} ».
+
+      Nom : {{first_name}} {{last_name}}
+      Email : {{email}}
+      Téléphone : {{phone}}
+
+      {{message}}
+    conference: google_meet          # google_meet | none
+    location: null                   # ex. "12 rue de la Paix, Paris"
+    guests_can_see_other_guests: true
+    guests_can_modify: false
+    guests_can_invite_others: false
+
+  branding:
+    color: "#1a73e8"
+    logo_url: null
+
+  confirmation_message: "Une invitation a été envoyée à votre adresse email."
+  listed: false                      # afficher la page sur l'accueil "/"
+  password: ""                       # mot de passe d'accès à la page ; vide = page publique
+
+# -----------------------------------------------------------------------------
+# Une entrée par page : la clé (le "slug") donne l'URL https://<BASE_URL>/<slug>
+# -----------------------------------------------------------------------------
+tenants:
+
+  # Page simple et publique : uniquement mon agenda
+  decouverte:
+    title: Appel découverte
+    description: 20 minutes pour faire connaissance et parler de votre projet.
+    listed: true
+    durations: [20]
+    slot_interval: 30
+    organizer:
+      account: moi@exemple.com       # compte Google qui crée l'événement (connecté via /admin)
+      calendar_id: primary
+
+  # Page d'équipe protégée : moi + 2 collègues, tout le monde doit être libre
+  demo-equipe:
+    title: Démo produit avec l'équipe
+    password: "${DEMO_EQUIPE_PASSWORD:-}"   # depuis l'environnement (vide = publique)
+    description: |
+      Une démo complète avec notre équipe technique et commerciale.
+    listed: true
+    durations: [45, 60]
+    min_notice: 1d
+    max_days_ahead: 21
+    max_per_day: 3
+    weekly_hours:
+      mon: ["10:00-12:00", "14:00-17:00"]
+      tue: ["10:00-12:00", "14:00-17:00"]
+      thu: ["10:00-12:00", "14:00-17:00"]
+      fri: ["10:00-12:00"]              # mer., sam., dim. absents = fermés
+    organizer:
+      account: moi@exemple.com
+    calendars:
+      # Agenda d'une personne : disponibilités vérifiées + invitée (par défaut)
+      - alice@exemple.com
+      - id: bob@exemple.com
+      # Agenda "ressource" : seulement ses disponibilités, pas d'invitation
+      - id: c_abc123@group.calendar.google.com
+        invite: false
+      # Personne invitée sans bloquer sur ses disponibilités
+      - id: manager@exemple.com
+        check: false
+    form:
+      message: required
+      message_label: "Quel est votre besoin ?"
+    event:
+      summary: "Démo — {{first_name}} {{last_name}}"
+    branding:
+      color: "#7b1fa2"

@@ -1,0 +1,23 @@
+{
+  "name": "rendez-vous-tenants",
+  "version": "1.0.0",
+  "description": "Pages de prise de rendez-vous multi-tenants basées sur les disponibilités Google Agenda",
+  "type": "module",
+  "main": "src/server.js",
+  "private": true,
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@googleapis/calendar": "^20.0.0",
+    "express": "^5.2.1",
+    "google-auth-library": "^11.1.0",
+    "js-yaml": "^5.4.2",
+    "luxon": "^3.7.2"
+  }
+}

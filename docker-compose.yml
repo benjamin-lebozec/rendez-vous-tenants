@@ -1,0 +1,16 @@
+services:
+  rdv:
+    build: .
+    image: rendez-vous-tenants:latest
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "${PORT:-3000}:${PORT:-3000}"                   # suit PORT du .env
+    volumes:
+      - ./config:/app/config          # config.yaml, modifiable depuis /admin/config (créé s'il manque)
+      - rdv-data:/data                # tokens Google + sauvegardes de la config
+      # Workspace / compte de service :
+      # - ./service-account.json:/run/secrets/google-sa.json:ro
+
+volumes:
+  rdv-data:
